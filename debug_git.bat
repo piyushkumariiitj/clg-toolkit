@@ -1,12 +1,4 @@
 @echo off
-echo Checking git status...
-git status
-echo.
-echo Removing old origin...
-git remote remove origin
-echo.
-echo Adding new origin...
-git remote add origin https://github.com/piyushkumariiitj/clg-toolkit.git
-echo.
-echo Pushing to main...
-git push -u origin main
+git status > git_status.txt 2>&1
+git log -n 1 > git_log.txt 2>&1
+exit

@@ -22,7 +22,7 @@
  * ================================================================================================
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Download, RefreshCw, AlertCircle, CheckCircle, RotateCcw, Monitor, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,6 +30,7 @@ import UploadArea from './components/UploadArea';
 import ToolConfig from './components/ToolConfig';
 import StatusBadge from './components/StatusBadge';
 import Preview from './components/Preview';
+import ThemeToggle from './components/ThemeToggle';
 import { uploadFile, compressFile, mergeFiles, convertImagesToPdf, splitFile, organiseFile, rotateFile, pdfToWord } from './api';
 
 const App = () => {
@@ -52,6 +53,20 @@ const App = () => {
         organise: { pageOrder: '' },
         rotate: { rotations: '{}' }
     });
+    
+    // Theme Management
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+    
+    useEffect(() => {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
     // Request/Response Lifecycle State
     const [processing, setProcessing] = useState(false); // Validates async state
@@ -160,25 +175,36 @@ const App = () => {
     // 🖥️ RENDER
     // --------------------------------------------------------------------------------------------
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-10 px-4 font-sans text-gray-800">
-            <div className="max-w-3xl mx-auto space-y-8">
+        <div className="min-h-screen bg-mesh py-10 px-4 font-sans antialiased text-gray-800 dark:text-gray-100 transition-colors duration-300">
+            <div className="max-w-3xl mx-auto space-y-8 relative z-10">
                 
                 {/* Header */}
-                <header className="text-center space-y-3">
-                    <div className="inline-flex items-center justify-center p-3 bg-white rounded-2xl shadow-sm mb-2">
-                        <Monitor className="text-primary w-8 h-8" />
+                <header className="relative text-center space-y-3">
+                    <div className="absolute top-0 right-0">
+                        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
                     </div>
-                    <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">
-                        College Submission <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Toolkit</span>
+                
+                    <motion.div 
+                        initial={{ scale: 0.9, opacity: 0 }} 
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="inline-flex items-center justify-center p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-2xl shadow-lg mb-2"
+                    >
+                        <Monitor className="text-primary w-8 h-8" />
+                    </motion.div>
+                    
+                    <h1 className="text-5xl font-extrabold tracking-tight text-slate-800 dark:text-white drop-shadow-sm">
+                        College Submission <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Toolkit</span>
                     </h1>
-                    <p className="text-gray-500 text-lg max-w-lg mx-auto">Fast, private, and purpose-built for students.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-lg max-w-lg mx-auto font-medium">
+                        Fast, private, and purpose-built for students.
+                    </p>
                 </header>
 
                 {/* Main Content Area */}
                 <div className="space-y-6">
                     
                     {/* SECTION 1: Input / Upload */}
-                    <div className="bg-white/80 backdrop-blur-sm border border-white/50 p-1 rounded-3xl shadow-xl shadow-blue-900/5">
+                    <div className="glass-card p-1 rounded-3xl dark:bg-slate-900/50 dark:border-slate-700">
                          <div className="p-6">
                              {files.length === 0 ? (
                                 <UploadArea onFilesSelected={handleFilesSelected} processing={processing} />
@@ -186,13 +212,13 @@ const App = () => {
                                 // File List View
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="font-semibold text-lg flex items-center gap-2">
+                                        <h3 className="font-semibold text-lg flex items-center gap-2 dark:text-white">
                                             Selected Files 
-                                            <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">{files.length}</span>
+                                            <span className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 px-2.5 py-0.5 rounded-full text-xs font-bold">{files.length}</span>
                                         </h3>
                                         <button 
                                             onClick={handleReset} 
-                                            className="text-sm font-medium text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                                            className="text-sm font-medium text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                                             disabled={processing}
                                         >
                                             <RotateCcw size={14} /> Reset
@@ -203,17 +229,21 @@ const App = () => {
                                             <motion.div 
                                                 initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                                                 key={i} 
-                                                className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100 shadow-sm"
+                                                className="flex items-center gap-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm"
                                             >
                                                 {/* Icon determination logic */}
                                                 {f.type.startsWith('image/') ? (
-                                                    <ImageIcon size={20} className="text-purple-500" />
+                                                    <div className="p-2 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                                                        <ImageIcon size={20} className="text-purple-500 dark:text-purple-400" />
+                                                    </div>
                                                 ) : (
-                                                    <FileText size={20} className="text-blue-500" />
+                                                    <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                                                        <FileText size={20} className="text-blue-500 dark:text-blue-400" />
+                                                    </div>
                                                 )}
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate text-gray-700">{f.name}</p>
-                                                    <p className="text-xs text-gray-400">{(f.size / 1024).toFixed(1)} KB</p>
+                                                    <p className="text-sm font-semibold truncate text-gray-700 dark:text-gray-200">{f.name}</p>
+                                                    <p className="text-xs text-gray-400 font-medium">{(f.size / 1024).toFixed(1)} KB</p>
                                                 </div>
                                                 {/* Status Badge from /validate */}
                                                 {validation && i === 0 && f.type === 'application/pdf' && (
@@ -279,31 +309,31 @@ const App = () => {
                             <motion.div 
                                 initial={{ opacity: 0, scale: 0.95 }} 
                                 animate={{ opacity: 1, scale: 1 }}
-                                className="bg-white rounded-3xl shadow-2xl border border-white/50 overflow-hidden relative"
+                                className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl border border-white/50 dark:border-slate-700 overflow-hidden relative"
                             >
                                 <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-green-400 to-emerald-500" />
                                 
                                 <div className="p-8 text-center pb-6">
-                                    <div className="mx-auto w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                                    <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mb-4 shadow-inner">
                                         <CheckCircle size={32} />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-gray-800">Ready to Submit!</h3>
-                                    <p className="text-gray-500">Your file has been optimized successfully.</p>
+                                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white">Ready to Submit!</h3>
+                                    <p className="text-gray-500 dark:text-gray-400">Your file has been optimized successfully.</p>
                                 </div>
                                 
                                 <div className="px-8 pb-8 space-y-6">
                                     {/* Critical Stats for user verification */}
                                     <div className="flex items-center justify-center gap-4 text-center">
-                                        <div className="px-6 py-3 bg-gray-50 rounded-2xl border border-gray-100 min-w-[120px]">
+                                        <div className="px-6 py-3 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-700 min-w-[120px]">
                                             <p className="text-[10px] tracking-wider font-bold text-gray-400 uppercase">Size</p>
-                                            <p className="text-xl font-black text-gray-800">{(result.size / 1024).toFixed(1)} KB</p>
+                                            <p className="text-xl font-black text-gray-800 dark:text-gray-200">{(result.size / 1024).toFixed(1)} KB</p>
                                         </div>
                                     </div>
 
                                     {/* Live Preview Component - Proves the file is valid */}
                                     {result.url && (
-                                        <div className="rounded-2xl overflow-hidden border border-gray-200 shadow-inner bg-gray-50">
-                                            <div className="bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">
+                                        <div className="rounded-2xl overflow-hidden border border-gray-200 dark:border-slate-700 shadow-inner bg-gray-50 dark:bg-slate-900">
+                                            <div className="bg-gray-100 dark:bg-slate-800 px-4 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-slate-700">
                                                 Final Document Preview
                                             </div>
                                             <Preview fileUrl={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')}${result.url}`} />
@@ -315,7 +345,7 @@ const App = () => {
                                         <a 
                                             href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')}${result.url}`} 
                                             download={result.filename}
-                                            className="block w-full py-4 text-center bg-gray-900 text-white rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
+                                            className="block w-full py-4 text-center bg-gray-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-bold text-lg hover:opacity-90 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
                                         >
                                             <span className="flex items-center justify-center gap-2">
                                                 <Download size={20} /> Download PDF
@@ -323,7 +353,7 @@ const App = () => {
                                         </a>
                                         <button 
                                             onClick={handleReset} 
-                                            className="block w-full text-center py-2 text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                                            className="block w-full text-center py-2 text-sm font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                                         >
                                             Process Another File
                                         </button>
@@ -336,13 +366,13 @@ const App = () => {
                 </div>
                 
                 {/* Footer */}
-                <footer className="text-center space-y-2 pt-8 border-t border-gray-200/50">
-                    <p className="text-xs text-gray-400">
+                <footer className="text-center space-y-2 pt-8 border-t border-gray-200/20 dark:border-slate-700/50">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                         Files are automatically deleted after 5 minutes.
                         <br />
                         No data is stored permanently.
                     </p>
-                    <p className="text-[10px] text-gray-300 font-medium tracking-widest uppercase">
+                    <p className="text-[10px] text-gray-300 dark:text-slate-600 font-medium tracking-widest uppercase">
                         College Submission Toolkit v2.0
                     </p>
                 </footer>

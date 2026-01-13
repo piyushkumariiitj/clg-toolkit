@@ -44,17 +44,17 @@ const SortablePage = ({ page, onRemove }) => {
 
     return (
         <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group cursor-grab touch-none order-item">
-             <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative">
-                <span className="absolute top-1 left-2 text-xs font-bold text-gray-400 bg-white/80 px-1 rounded z-10">
+             <div className="bg-white dark:bg-slate-800 p-2 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow relative">
+                <span className="absolute top-1 left-2 text-xs font-bold text-gray-500 dark:text-gray-300 bg-white/90 dark:bg-slate-900/90 px-1 rounded z-10 border border-gray-100 dark:border-slate-700">
                     P{page.pageNum}
                 </span>
                 <button 
                     onPointerDown={(e) => { e.stopPropagation(); onRemove(page.id); }} // Prevent drag start on click
-                    className="absolute top-1 right-1 p-1 text-red-400 hover:text-red-600 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                    className="absolute top-1 right-1 p-1 text-red-400 hover:text-red-600 bg-white/90 dark:bg-slate-900/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
                 >
                     <X size={14} />
                 </button>
-                <img src={page.image} alt={`Page ${page.pageNum}`} className="w-full h-auto rounded border border-gray-100 select-none pointer-events-none" />
+                <img src={page.image} alt={`Page ${page.pageNum}`} className="w-full h-auto rounded border border-gray-100 dark:border-slate-700 select-none pointer-events-none" />
             </div>
         </div>
     );
@@ -194,7 +194,7 @@ const PageGrid = ({ file, mode, onChange, initialSelection }) => {
                     </SortableContext>
                 </DndContext>
                 <div className="mt-4 text-center">
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                         {pages.length} pages remaining
                     </p>
                 </div>
@@ -213,18 +213,21 @@ const PageGrid = ({ file, mode, onChange, initialSelection }) => {
                         onClick={() => togglePage(page.pageNum)}
                         className={`
                             relative cursor-pointer rounded-lg border-2 p-2 transition-all duration-200
-                            ${isSelected ? 'border-primary bg-blue-50/50 shadow-md transform scale-[1.02]' : 'border-transparent hover:bg-gray-50'}
+                            ${isSelected 
+                                ? 'border-primary bg-blue-50/50 dark:bg-blue-900/30 shadow-md transform scale-[1.02]' 
+                                : 'border-transparent hover:bg-gray-50 dark:hover:bg-slate-800'
+                            }
                         `}
                     >
-                         <div className={`absolute top-2 right-2 z-10 transition-colors ${isSelected ? 'text-primary' : 'text-gray-200'}`}>
-                            <CheckCircle size={20} fill={isSelected ? "currentColor" : "white"} className={isSelected ? "text-white" : ""}/>
+                         <div className={`absolute top-2 right-2 z-10 transition-colors ${isSelected ? 'text-primary' : 'text-gray-200 dark:text-slate-700'}`}>
+                            <CheckCircle size={20} fill={isSelected ? "currentColor" : "white"} className={isSelected ? "text-white" : "dark:fill-slate-800"}/>
                          </div>
                          <img 
                             src={page.image} 
                             alt={`Page ${page.pageNum}`} 
                             className={`w-full h-auto rounded shadow-sm transition-all ${isSelected ? 'opacity-100' : 'opacity-60 grayscale-[0.5]'}`} 
                         />
-                        <p className={`text-center text-xs font-medium mt-2 ${isSelected ? 'text-primary' : 'text-gray-400'}`}>
+                        <p className={`text-center text-xs font-medium mt-2 ${isSelected ? 'text-primary dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`}>
                             Page {page.pageNum}
                         </p>
                     </div>

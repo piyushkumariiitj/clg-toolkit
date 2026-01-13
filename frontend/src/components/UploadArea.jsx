@@ -23,20 +23,48 @@ const UploadArea = ({ onFilesSelected, processing }) => {
         <div 
             {...getRootProps()} 
             className={`
-                border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors
-                ${isDragActive ? 'border-primary bg-blue-50' : 'border-gray-300 hover:border-gray-400'}
-                ${processing ? 'opacity-50 cursor-not-allowed' : ''}
+                relative overflow-hidden group cursor-pointer transition-all duration-300
+                border-2 border-dashed rounded-3xl p-10 text-center
+                ${isDragActive 
+                    ? 'border-primary bg-blue-50/50 dark:bg-blue-900/20' 
+                    : 'border-slate-300 dark:border-slate-600 hover:border-primary/50 dark:hover:border-primary/50 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm'
+                }
+                ${processing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
             `}
         >
             <input {...getInputProps()} />
-            <div className="flex flex-col items-center gap-3">
-                <div className="p-4 bg-blue-50 rounded-full text-primary">
-                    <UploadCloud size={32} />
+            
+            {/* Animated Glow on Hover */}
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+            <div className="relative flex flex-col items-center gap-4 z-10">
+                <div className={`
+                    p-6 rounded-2xl transition-all duration-300 shadow-xl
+                    ${isDragActive ? 'bg-primary text-white scale-110' : 'bg-white dark:bg-slate-700 text-primary dark:text-blue-400 group-hover:scale-105 group-hover:-translate-y-1'}
+                `}>
+                    <UploadCloud size={48} strokeWidth={1.5} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-700">
-                    {isDragActive ? 'Drop files here' : 'Click to upload or drag & drop'}
-                </h3>
-                <p className="text-sm text-gray-500">PDFs or Images (JPG/PNG)</p>
+                
+                <div className="space-y-1">
+                    <h3 className="text-xl font-bold text-gray-700 dark:text-gray-200">
+                        {isDragActive ? 'Drop it like it\'s hot!' : 'Upload Documents'}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                        Drag & drop or click to browse
+                    </p>
+                </div>
+
+                <div className="flex gap-2 mt-2">
+                    <span className="px-2 py-1 rounded-md bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold border border-red-100 dark:border-red-800">
+                        PDF
+                    </span>
+                    <span className="px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 text-xs font-semibold border border-purple-100 dark:border-purple-800">
+                        JPG
+                    </span>
+                    <span className="px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs font-semibold border border-blue-100 dark:border-blue-800">
+                        PNG
+                    </span>
+                </div>
             </div>
         </div>
     );
