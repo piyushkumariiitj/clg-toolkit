@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 
-// Set worker source - using CDN for simplicity and reliability in this setup
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set worker source - using local build via Vite to match version exactly
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const Preview = ({ fileUrl }) => {
     const canvasRef = useRef(null);
