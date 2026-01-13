@@ -66,3 +66,18 @@ export const organiseFile = async (file, pageOrder) => {
     const response = await axios.post(`${API_URL}/organise`, formData);
     return response.data;
 };
+
+export const rotateFile = async (file, rotations) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('rotations', JSON.stringify(rotations));
+    const response = await axios.post(`${API_URL}/rotate`, formData);
+    return response.data;
+};
+
+export const pdfToWord = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axios.post(`${API_URL}/pdf-to-word`, formData);
+    return response.data;
+};
