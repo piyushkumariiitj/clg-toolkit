@@ -1,9 +1,8 @@
 # Use Node.js 18 (LTS) on Alpine Linux for a small image
 FROM node:18-alpine
 
-# Install Ghostscript
-# Alpine's package manager is 'apk'
-RUN apk add --no-cache ghostscript
+# Install system dependencies (Ghostscript for compression, LibreOffice for conversion)
+RUN apk add --no-cache ghostscript libreoffice
 
 # Set working directory
 WORKDIR /app

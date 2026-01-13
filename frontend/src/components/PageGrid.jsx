@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
+import { DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, RotateCw } from 'lucide-react';
 
 // Common Worker Setup
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
@@ -43,7 +43,7 @@ const SortablePage = ({ page, onRemove }) => {
     };
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group cursor-grab touch-none">
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group cursor-grab touch-none order-item">
              <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative">
                 <span className="absolute top-1 left-2 text-xs font-bold text-gray-400 bg-white/80 px-1 rounded z-10">
                     P{page.pageNum}
@@ -65,6 +65,7 @@ const PageGrid = ({ file, mode, onChange, initialSelection }) => {
     const [pages, setPages] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(new Set());
+    const [rotations, setRotations] = useState({}); // { 1: 90, 2: 180 }
     const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
 
     // Load PDF
@@ -102,19 +103,27 @@ const PageGrid = ({ file, mode, onChange, initialSelection }) => {
         }
     }, [initialSelection, mode]);
 
-    // Split: Toggle Logic
+    // SPLIT: Toggle Logic
     const togglePage = (pageNum) => {
         const newSet = new Set(selected);
         if (newSet.has(pageNum)) newSet.delete(pageNum);
         else newSet.add(pageNum);
         
-        setSelected(newSet); // Optimistic UI
-        // Update parent with sorted list
+        setSelected(newSet);
         const sorted = Array.from(newSet).sort((a,b) => a-b);
         onChange(sorted.join(', '));
     };
 
-    // Organise: Drag Logic
+    // ROTATE: Rotate Logic
+    const rotatePage = (pageNum) => {
+        const currentAngle = rotations[pageNum] || 0;
+        const newAngle = (currentAngle + 90) % 360;
+        const newRotations = { ...rotations, [pageNum]: newAngle };
+        setRotations(newRotations);
+        onChange(JSON.stringify(newRotations));
+    };
+
+    // ORGANISE: Drag Logic
     const handleDragEnd = (event) => {
         const { active, over } = event;
         if (active.id !== over.id) {
@@ -123,7 +132,7 @@ const PageGrid = ({ file, mode, onChange, initialSelection }) => {
                 const newIndex = items.findIndex(i => i.id === over.id);
                 const newOrder = arrayMove(items, oldIndex, newIndex);
                 
-                onChange(newOrder.map(p => p.pageNum).join(', ')); // Propagate change
+                onChange(newOrder.map(p => p.pageNum).join(', '));
                 return newOrder;
             });
         }
@@ -138,6 +147,38 @@ const PageGrid = ({ file, mode, onChange, initialSelection }) => {
     };
 
     if (loading) return <div className="p-8 text-center text-gray-400 animate-pulse">Generating thumbnails...</div>;
+
+    // --- Mode: ROTATE ---
+    if (mode === 'rotate') {
+        return (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 select-none">
+                {pages.map((page) => {
+                    const angle = rotations[page.pageNum] || 0;
+                    return (
+                        <div key={page.id} className="relative group text-center">
+                            <div className="relative inline-block overflow-hidden rounded-lg">
+                                <img 
+                                    src={page.image} 
+                                    alt={`Page ${page.pageNum}`} 
+                                    className="w-full h-auto rounded shadow-sm transition-transform duration-300 border border-gray-200"
+                                    style={{ transform: `rotate(${angle}deg)` }} 
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none">
+                                    <button 
+                                        onClick={() => rotatePage(page.pageNum)}
+                                        className="bg-white p-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 hover:bg-gray-50 transform hover:scale-110 transition-all pointer-events-auto"
+                                    >
+                                        <RotateCw size={24} className="text-gray-700" />
+                                    </button>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2">Page {page.pageNum} ({angle}°)</p>
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
 
     // --- Mode: ORGANISE (Drag & Drop) ---
     if (mode === 'organise') {

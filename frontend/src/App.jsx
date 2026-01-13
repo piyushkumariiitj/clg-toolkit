@@ -30,7 +30,7 @@ import UploadArea from './components/UploadArea';
 import ToolConfig from './components/ToolConfig';
 import StatusBadge from './components/StatusBadge';
 import Preview from './components/Preview';
-import { uploadFile, compressFile, mergeFiles, convertImagesToPdf, splitFile, organiseFile } from './api';
+import { uploadFile, compressFile, mergeFiles, convertImagesToPdf, splitFile, organiseFile, rotateFile, pdfToWord } from './api';
 
 const App = () => {
     // --------------------------------------------------------------------------------------------
@@ -49,7 +49,8 @@ const App = () => {
     const [config, setConfig] = useState({ 
         targetSize: 200 * 1024, 
         split: { pages: '' },
-        organise: { pageOrder: '' }
+        organise: { pageOrder: '' },
+        rotate: { rotations: '{}' }
     });
 
     // Request/Response Lifecycle State
@@ -125,6 +126,10 @@ const App = () => {
                 res = await splitFile(files[0], config.split.pages);
             } else if (mode === 'organise') {
                 res = await organiseFile(files[0], config.organise.pageOrder);
+            } else if (mode === 'rotate') {
+                res = await rotateFile(files[0], JSON.parse(config.rotate.rotations));
+            } else if (mode === 'pdf-to-word') {
+                res = await pdfToWord(files[0]);
             }
             
             setResult(res);

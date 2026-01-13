@@ -13,6 +13,8 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files }) => 
         { id: 'merge', label: 'Merge', disabled: hasImage },       // Merge usually for PDFs
         { id: 'split', label: 'Split', disabled: hasImage },
         { id: 'organise', label: 'Organise', disabled: hasImage },
+        { id: 'rotate', label: 'Rotate', disabled: hasImage },
+        { id: 'pdf-to-word', label: 'Pdf > Word', disabled: hasImage },
         { id: 'image-to-pdf', label: 'Img > PDF', disabled: hasPdf } // Tool for Images only
     ];
 
@@ -149,6 +151,30 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files }) => 
                                 </div>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {mode === 'rotate' && (
+                    <div className="space-y-4">
+                        <div className="p-3 bg-indigo-50 text-indigo-800 rounded-lg text-sm">
+                            Rotate individual pages.
+                        </div>
+                        {files && files.length > 0 && files[0].type === 'application/pdf' && (
+                            <div className="max-h-[400px] overflow-y-auto p-4 border rounded-xl bg-gray-50/50 custom-scrollbar">
+                                <PageGrid 
+                                    file={files[0]} 
+                                    mode="rotate" 
+                                    onChange={(val) => setConfig({...config, rotate: { rotations: val }})}
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {mode === 'pdf-to-word' && (
+                    <div className="text-center text-gray-500 py-4">
+                        <p>Convert your PDF into an editable Word document.</p>
+                        <p className="text-xs mt-1">Uses LibreOffice for high-quality conversion.</p>
                     </div>
                 )}
 

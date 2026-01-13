@@ -26,7 +26,7 @@
 
 const path = require('path');
 const fs = require('fs-extra'); // Enhanced FS with promises/cleanup
-const { PDFDocument } = require('pdf-lib'); // JS-native PDF manipulation (No C++ bindings needed)
+const { PDFDocument, degrees } = require('pdf-lib'); // JS-native PDF manipulation (No C++ bindings needed)
 const { exec } = require('child_process'); // To spawn Ghostscript processes
 const { v4: uuidv4 } = require('uuid'); // Unique IDs for collision avoidance
 
@@ -555,5 +555,109 @@ exports.organise = async (req, res) => {
     } catch (err) {
         console.error('Organise error:', err);
         res.status(500).json({ error: 'Failed to organise PDF' });
+    }
+};
+
+/**
+ * Rotate PDF Pages
+ */
+exports.rotate = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        const { rotations } = req.body; // JSON string: "{\"1\": 90, \"3\": 180}"
+        
+        if (!rotations) return res.status(400).json({ error: 'Rotation data required' });
+
+        const rotationMap = JSON.parse(rotations);
+        const inputPath = req.file.path;
+        const outputPath = path.join(TEMP_DIR, `rotated_${req.file.filename}`);
+
+        const pdfBytes = await fs.readFile(inputPath);
+        const pdfDoc = await PDFDocument.load(pdfBytes);
+        const pages = pdfDoc.getPages();
+
+        Object.keys(rotationMap).forEach(pageIdx => {
+             const pIndex = parseInt(pageIdx) - 1; 
+             const angle = parseInt(rotationMap[pageIdx]);
+             if (pIndex >= 0 && pIndex < pages.length) {
+                 const page = pages[pIndex];
+                 const currentRotation = page.getRotation().angle;
+                 page.setRotation(degrees(currentRotation + angle));
+             }
+        });
+
+        const pdfData = await pdfDoc.save();
+        await fs.writeFile(outputPath, pdfData);
+        const stats = await fs.stat(outputPath);
+
+        res.json({
+            url: `/download/${path.basename(outputPath)}`,
+            filename: path.basename(outputPath),
+            size: stats.size,
+            originalSize: req.file.size
+        });
+        
+    } catch (err) {
+        console.error('Rotate error:', err);
+        res.status(500).json({ error: 'Failed to rotate PDF' });
+    }
+};
+
+/**
+ * PDF to Word (Docx)
+ */
+exports.pdfToWord = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        
+        const inputPath = req.file.path;
+        const outputDir = path.join(TEMP_DIR, 'docx_out');
+        await fs.ensureDir(outputDir);
+        
+        const filenameWithoutExt = path.parse(req.file.filename).name;
+        // Output will be in outputDir/filename.docx
+        
+        // Command for LibreOffice
+        const cmd = `soffice --headless --infilter="writer_pdf_import" --convert-to docx --outdir "${outputDir}" "${inputPath}"`;
+        
+        console.log('Executing conversion:', cmd);
+        
+        await new Promise((resolve, reject) => {
+            exec(cmd, (error, stdout, stderr) => {
+                if (error) {
+                    // Try to resolve anyway as LibreOffice sometimes writes to stderr warnings
+                    console.warn('LibreOffice Log:', stderr);
+                    resolve(stdout);
+                } else {
+                    resolve(stdout);
+                }
+            });
+        });
+
+        // LibreOffice keeps the original filename but changes extension
+        // Since input was already a unique ID from multer (e.g. 123456), the output is 123456.docx
+        const expectedName = `${filenameWithoutExt}.docx`;
+        const expectedOutputPath = path.join(outputDir, expectedName);
+
+        if (await fs.pathExists(expectedOutputPath)) {
+             const stats = await fs.stat(expectedOutputPath);
+             
+             // Move to main temp to serve easily
+             const finalPath = path.join(TEMP_DIR, expectedName);
+             await fs.move(expectedOutputPath, finalPath, { overwrite: true });
+
+            res.json({
+                url: `/download/${expectedName}`,
+                filename: expectedName,
+                size: stats.size
+            });
+            
+        } else {
+            throw new Error('Output file not found. Conversion might have failed silently.');
+        }
+
+    } catch (err) {
+        console.error('PDF to Word Error:', err);
+        res.status(500).json({ error: 'Conversion failed. Service might be busy or file is too complex.' });
     }
 };

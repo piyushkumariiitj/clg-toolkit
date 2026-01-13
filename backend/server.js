@@ -45,6 +45,8 @@ app.post('/api/rename', upload.single('file'), pdfController.rename);
 app.post('/api/image-to-pdf', upload.array('files'), pdfController.imageToPdf);
 app.post('/api/split', upload.single('file'), pdfController.split);
 app.post('/api/organise', upload.single('file'), pdfController.organise);
+app.post('/api/rotate', upload.single('file'), pdfController.rotate);
+app.post('/api/pdf-to-word', upload.single('file'), pdfController.pdfToWord);
 app.post('/api/metadata', upload.single('file'), pdfController.updateMetadata);
 app.post('/api/validate', upload.single('file'), pdfController.validate);
 
