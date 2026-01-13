@@ -1,11 +1,18 @@
 import React from 'react';
 
-const ToolConfig = ({ mode, setMode, config, setConfig, processing }) => {
+const ToolConfig = ({ mode, setMode, config, setConfig, processing, files }) => {
     
+    // 🧠 LOGIC: Analyze files to determine available tools
+    const hasPdf = files?.some(f => f.type === 'application/pdf');
+    const hasImage = files?.some(f => f.type.startsWith('image/'));
+    const isMixed = hasPdf && hasImage;
+
     const tabs = [
-        { id: 'compress', label: 'Compress' },
-        { id: 'merge', label: 'Merge' },
-        { id: 'image-to-pdf', label: 'Img > PDF' }
+        { id: 'compress', label: 'Compress', disabled: hasImage }, // Tools for PDF only
+        { id: 'merge', label: 'Merge', disabled: hasImage },       // Merge usually for PDFs
+        { id: 'split', label: 'Split', disabled: hasImage },
+        { id: 'organise', label: 'Organise', disabled: hasImage },
+        { id: 'image-to-pdf', label: 'Img > PDF', disabled: hasPdf } // Tool for Images only
     ];
 
     return (
@@ -15,10 +22,11 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing }) => {
                     <button
                         key={tab.id}
                         onClick={() => setMode(tab.id)}
-                        disabled={processing}
+                        disabled={processing || tab.disabled}
                         className={`
                             flex-1 min-w-[100px] py-4 text-sm font-medium transition-colors whitespace-nowrap
-                            ${mode === tab.id ? 'text-primary border-b-2 border-primary bg-blue-50/50' : 'text-gray-500 hover:text-gray-700'}
+                            ${mode === tab.id ? 'text-primary border-b-2 border-primary bg-blue-50/50' : ''}
+                            ${tab.disabled ? 'text-gray-300 cursor-not-allowed bg-gray-50' : 'text-gray-500 hover:text-gray-700'}
                         `}
                     >
                         {tab.label}
@@ -75,6 +83,48 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing }) => {
                     <div className="text-center text-gray-500 py-4">
                         <p>Convert your screenshots or photos into a single PDF.</p>
                         <p className="text-xs mt-1">Supports JPG, PNG.</p>
+                    </div>
+                )}
+
+                {mode === 'split' && (
+                    <div className="space-y-4">
+                        <div className="p-3 bg-purple-50 text-purple-800 rounded-lg text-sm">
+                            Extract specific pages or ranges to a new PDF.
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Page Ranges</label>
+                            <input 
+                                type="text" 
+                                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder-gray-300"
+                                placeholder="e.g. 1-5, 8, 11-13"
+                                value={config.split?.pages || ''}
+                                onChange={(e) => setConfig({...config, split: {...config.split, pages: e.target.value}})}
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                                Enter page numbers/ranges separated by commas (e.g., 1-3 to extract first 3 pages).
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {mode === 'organise' && (
+                    <div className="space-y-4">
+                        <div className="p-3 bg-orange-50 text-orange-800 rounded-lg text-sm">
+                            Reorder pages in your PDF.
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Page Order</label>
+                            <input 
+                                type="text" 
+                                className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-primary/20 outline-none transition-all placeholder-gray-300"
+                                placeholder="e.g. 1, 3, 2, 4"
+                                value={config.organise?.pageOrder || ''}
+                                onChange={(e) => setConfig({...config, organise: {...config.organise, pageOrder: e.target.value}})}
+                            />
+                            <p className="text-xs text-gray-500 mt-2">
+                                Enter the new order of pages. You can also skip pages to delete them.
+                            </p>
+                        </div>
                     </div>
                 )}
 

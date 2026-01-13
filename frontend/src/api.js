@@ -50,3 +50,19 @@ export const updateMetadata = async (file, metadata) => {
     const response = await axios.post(`${API_URL}/metadata`, formData);
     return response.data;
 };
+
+export const splitFile = async (file, pages) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('pages', pages);
+    const response = await axios.post(`${API_URL}/split`, formData);
+    return response.data;
+};
+
+export const organiseFile = async (file, pageOrder) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('pageOrder', pageOrder);
+    const response = await axios.post(`${API_URL}/organise`, formData);
+    return response.data;
+};

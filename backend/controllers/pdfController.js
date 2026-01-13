@@ -450,3 +450,110 @@ exports.validate = async (req, res) => {
         res.status(500).json({ error: 'Validation failed' });
     }
 };
+
+/**
+ * Split PDF (Extract Pages)
+ */
+exports.split = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        const { pages } = req.body; 
+        if (!pages) return res.status(400).json({ error: 'Page range required' });
+
+        const inputPath = req.file.path;
+        const outputPath = path.join(TEMP_DIR, `split_${req.file.filename}`);
+
+        const pdfBytes = await fs.readFile(inputPath);
+        const srcDoc = await PDFDocument.load(pdfBytes);
+        const newDoc = await PDFDocument.create();
+
+        const totalPages = srcDoc.getPageCount();
+        const pageIndices = [];
+        
+        try {
+            const parts = pages.split(',');
+            for (const part of parts) {
+                if (part.includes('-')) {
+                    const [start, end] = part.split('-').map(n => parseInt(n.trim()));
+                    if (start > end) continue; 
+                    for (let i = start; i <= end; i++) {
+                        if (i >= 1 && i <= totalPages) pageIndices.push(i - 1);
+                    }
+                } else {
+                    const pageNum = parseInt(part.trim());
+                    if (pageNum >= 1 && pageNum <= totalPages) pageIndices.push(pageNum - 1);
+                }
+            }
+        } catch (e) {
+            return res.status(400).json({ error: 'Invalid page format' });
+        }
+
+        if (pageIndices.length === 0) return res.status(400).json({ error: 'No valid pages selected' });
+
+        const copiedPages = await newDoc.copyPages(srcDoc, pageIndices);
+        copiedPages.forEach(page => newDoc.addPage(page));
+
+        const pdfData = await newDoc.save();
+        await fs.writeFile(outputPath, pdfData);
+        const stats = await fs.stat(outputPath);
+
+        res.json({
+            url: `/download/${path.basename(outputPath)}`,
+            filename: path.basename(outputPath),
+            size: stats.size,
+            originalSize: req.file.size
+        });
+
+    } catch (err) {
+        console.error('Split error:', err);
+        res.status(500).json({ error: 'Failed to split PDF' });
+    }
+};
+
+/**
+ * Organise PDF
+ */
+exports.organise = async (req, res) => {
+    try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        const { pageOrder } = req.body; 
+        if (!pageOrder) return res.status(400).json({ error: 'Page order required' });
+
+        const inputPath = req.file.path;
+        const outputPath = path.join(TEMP_DIR, `organised_${req.file.filename}`);
+
+        const pdfBytes = await fs.readFile(inputPath);
+        const srcDoc = await PDFDocument.load(pdfBytes);
+        const newDoc = await PDFDocument.create();
+        
+        const totalPages = srcDoc.getPageCount();
+        const orderParts = pageOrder.split(',').map(n => parseInt(n.trim()));
+        
+        const pageIndices = [];
+        for (const pageNum of orderParts) {
+             if (pageNum >= 1 && pageNum <= totalPages) {
+                 pageIndices.push(pageNum - 1);
+             }
+        }
+
+        if (pageIndices.length === 0) return res.status(400).json({ error: 'Invalid page order' });
+
+        const copiedPages = await newDoc.copyPages(srcDoc, pageIndices);
+        copiedPages.forEach(page => newDoc.addPage(page));
+
+        const pdfData = await newDoc.save();
+        await fs.writeFile(outputPath, pdfData);
+        const stats = await fs.stat(outputPath);
+
+        res.json({
+            url: `/download/${path.basename(outputPath)}`,
+            filename: path.basename(outputPath),
+            size: stats.size,
+            originalSize: req.file.size
+        });
+
+    } catch (err) {
+        console.error('Organise error:', err);
+        res.status(500).json({ error: 'Failed to organise PDF' });
+    }
+};

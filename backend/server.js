@@ -43,6 +43,8 @@ app.post('/api/compress', upload.single('file'), pdfController.compress);
 app.post('/api/merge', upload.array('files'), pdfController.merge);
 app.post('/api/rename', upload.single('file'), pdfController.rename);
 app.post('/api/image-to-pdf', upload.array('files'), pdfController.imageToPdf);
+app.post('/api/split', upload.single('file'), pdfController.split);
+app.post('/api/organise', upload.single('file'), pdfController.organise);
 app.post('/api/metadata', upload.single('file'), pdfController.updateMetadata);
 app.post('/api/validate', upload.single('file'), pdfController.validate);
 

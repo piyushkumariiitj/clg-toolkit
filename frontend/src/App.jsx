@@ -30,7 +30,7 @@ import UploadArea from './components/UploadArea';
 import ToolConfig from './components/ToolConfig';
 import StatusBadge from './components/StatusBadge';
 import Preview from './components/Preview';
-import { uploadFile, compressFile, mergeFiles, convertImagesToPdf } from './api';
+import { uploadFile, compressFile, mergeFiles, convertImagesToPdf, splitFile, organiseFile } from './api';
 
 const App = () => {
     // --------------------------------------------------------------------------------------------
@@ -41,13 +41,15 @@ const App = () => {
     const [files, setFiles] = useState([]);
     
     // UI State Machine: Controls which 'Tool' is active
-    // Options: 'compress' | 'merge' | 'image-to-pdf'
+    // Options: 'compress' | 'merge' | 'split' | 'organise' | 'image-to-pdf'
     const [mode, setMode] = useState('compress'); 
     
     // Configuration Object: Stores settings for ALL tools.
     // *Design Decision*: Centralizing config prevents data loss when switching tabs.
     const [config, setConfig] = useState({ 
         targetSize: 200 * 1024, 
+        split: { pages: '' },
+        organise: { pageOrder: '' }
     });
 
     // Request/Response Lifecycle State
@@ -119,6 +121,10 @@ const App = () => {
                 res = await mergeFiles(files);
             } else if (mode === 'image-to-pdf') {
                 res = await convertImagesToPdf(files);
+            } else if (mode === 'split') {
+                res = await splitFile(files[0], config.split.pages);
+            } else if (mode === 'organise') {
+                res = await organiseFile(files[0], config.organise.pageOrder);
             }
             
             setResult(res);
@@ -226,6 +232,7 @@ const App = () => {
                                 config={config} 
                                 setConfig={setConfig} 
                                 processing={processing}
+                                files={files}
                             />
                         </motion.div>
                     )}
