@@ -41,8 +41,6 @@ The application is split into two distinct parts:
 
 1.  **Frontend (Client)**: A React application that handles the UI, file selection, and visual manipulation (like reordering pages). It communicates with the backend via REST API.
 2.  **Backend (Server)**: A Node.js server that performs the heavy lifting. It uses system-level interaction (spawning processes) to run powerful tools like Ghostscript and LibreOffice.
-
-```mermaid
 graph TD
     User[Student] -->|Uploads File| Frontend[React Frontend (Netlify)]
     Frontend -->|POST /api/compress| Backend[Node.js Backend (Render)]
@@ -50,7 +48,6 @@ graph TD
     Backend -->|Spawns Process| LO[LibreOffice]
     GS -->|Optimized PDF| Backend
     Backend -->|Download URL| Frontend
-```
 
 ---
 
