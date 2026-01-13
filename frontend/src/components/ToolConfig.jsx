@@ -45,6 +45,20 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing }) => {
                                     {size >= 1024 ? `${size/1024} MB` : `${size} KB`}
                                 </button>
                             ))}
+                            <div className="relative group flex items-center col-span-2 lg:col-span-4">
+                                <span className="absolute left-3 text-gray-400 text-sm">Custom:</span>
+                                <input 
+                                    type="number" 
+                                    className="w-full pl-20 pr-12 py-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all border-gray-200 text-gray-700" 
+                                    placeholder="Enter size..."
+                                    value={config.targetSize ? Math.round(config.targetSize / 1024) : ''}
+                                    onChange={(e) => {
+                                        const ky = parseInt(e.target.value) || 0;
+                                        setConfig({...config, targetSize: ky * 1024});
+                                    }}
+                                />
+                                <span className="absolute right-3 text-gray-400 text-sm">KB</span>
+                            </div>
                         </div>
                          <p className="text-xs text-gray-500 mt-2">
                             Select a size. We'll try our best to get under this limit while preserving quality.
