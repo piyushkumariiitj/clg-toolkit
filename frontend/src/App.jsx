@@ -300,14 +300,14 @@ const App = () => {
                                             <div className="bg-gray-100 px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-200">
                                                 Final Document Preview
                                             </div>
-                                            <Preview fileUrl={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${result.url}`} />
+                                            <Preview fileUrl={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')}${result.url}`} />
                                         </div>
                                     )}
 
                                     {/* Primary CTA */}
                                     <div className="space-y-3 pt-2">
                                         <a 
-                                            href={`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${result.url}`} 
+                                            href={`${(import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '')}${result.url}`} 
                                             download={result.filename}
                                             className="block w-full py-4 text-center bg-gray-900 text-white rounded-2xl font-bold text-lg hover:bg-black transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
                                         >
