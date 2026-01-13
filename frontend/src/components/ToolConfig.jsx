@@ -1,4 +1,5 @@
 import React from 'react';
+import PageGrid from './PageGrid';
 
 const ToolConfig = ({ mode, setMode, config, setConfig, processing, files }) => {
     
@@ -100,9 +101,21 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files }) => 
                                 value={config.split?.pages || ''}
                                 onChange={(e) => setConfig({...config, split: {...config.split, pages: e.target.value}})}
                             />
-                            <p className="text-xs text-gray-500 mt-2">
-                                Enter page numbers/ranges separated by commas (e.g., 1-3 to extract first 3 pages).
+                            <p className="text-xs text-gray-500 mt-2 mb-4">
+                                Click pages below to select, or type ranges above.
                             </p>
+                            
+                            {/* Visual Selector */}
+                            {files && files.length > 0 && files[0].type === 'application/pdf' && (
+                                <div className="max-h-[400px] overflow-y-auto p-2 border rounded-xl bg-gray-50/50 custom-scrollbar">
+                                    <PageGrid 
+                                        file={files[0]} 
+                                        mode="split" 
+                                        initialSelection={config.split?.pages}
+                                        onChange={(val) => setConfig({...config, split: {...config.split, pages: val}})}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -121,9 +134,20 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files }) => 
                                 value={config.organise?.pageOrder || ''}
                                 onChange={(e) => setConfig({...config, organise: {...config.organise, pageOrder: e.target.value}})}
                             />
-                            <p className="text-xs text-gray-500 mt-2">
-                                Enter the new order of pages. You can also skip pages to delete them.
+                            <p className="text-xs text-gray-500 mt-2 mb-4">
+                                Drag pages below to reorder.
                             </p>
+
+                            {/* Visual Sorter */}
+                            {files && files.length > 0 && files[0].type === 'application/pdf' && (
+                                <div className="max-h-[400px] overflow-y-auto p-4 border rounded-xl bg-gray-50/50 custom-scrollbar">
+                                    <PageGrid 
+                                        file={files[0]} 
+                                        mode="organise" 
+                                        onChange={(val) => setConfig({...config, organise: {...config.organise, pageOrder: val}})}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
