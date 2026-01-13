@@ -1,23 +1,75 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { Reorder, useDragControls } from 'framer-motion';
-import { CheckCircle, GripVertical, Trash2 } from 'lucide-react';
+import { DndContext, closestCenter, MouseSensor, TouchSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
+import { arrayMove, SortableContext, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { CheckCircle, X } from 'lucide-react';
 
-// Common Worker Setup (Reusing the fix from Preview.jsx)
+// Common Worker Setup
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
-const PageGrid = ({ file, mode, onChange, initialOrder, initialSelection }) => {
-    const [pages, setPages] = useState([]); // Array of { pageNum: 1, image: "data:..." }
-    const [loading, setLoading] = useState(true);
-    // Local state for 'Organise' (Reordering) - effectively the current visual list
-    const [orderedPages, setOrderedPages] = useState([]); 
-    // Local state for 'Split' (Selection) - Set of selected page numbers
-    const [selected, setSelected] = useState(new Set(initialSelection ? initialSelection.split(',').map(Number).filter(n => n) : []));
+// --- Helper: Parse Ranges like "1-3, 5" into [1, 2, 3, 5] ---
+const parsePageRange = (input) => {
+    if (!input) return new Set();
+    const result = new Set();
+    try {
+        const parts = input.split(',');
+        for (const part of parts) {
+            const p = part.trim();
+            if (p.includes('-')) {
+                const [start, end] = p.split('-').map(Number);
+                if (!isNaN(start) && !isNaN(end) && start <= end) {
+                    for (let i = start; i <= end; i++) result.add(i);
+                }
+            } else {
+                const num = parseInt(p);
+                if (!isNaN(num)) result.add(num);
+            }
+        }
+    } catch(e) { console.error("Parse error", e); }
+    return result;
+};
 
+// --- Sub-Component: Sortable Item ---
+const SortablePage = ({ page, onRemove }) => {
+    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: page.id });
+    
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 999 : 1,
+        opacity: isDragging ? 0.5 : 1
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group cursor-grab touch-none">
+             <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative">
+                <span className="absolute top-1 left-2 text-xs font-bold text-gray-400 bg-white/80 px-1 rounded z-10">
+                    P{page.pageNum}
+                </span>
+                <button 
+                    onPointerDown={(e) => { e.stopPropagation(); onRemove(page.id); }} // Prevent drag start on click
+                    className="absolute top-1 right-1 p-1 text-red-400 hover:text-red-600 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                >
+                    <X size={14} />
+                </button>
+                <img src={page.image} alt={`Page ${page.pageNum}`} className="w-full h-auto rounded border border-gray-100 select-none pointer-events-none" />
+            </div>
+        </div>
+    );
+};
+
+// --- Main Grid ---
+const PageGrid = ({ file, mode, onChange, initialSelection }) => {
+    const [pages, setPages] = useState([]); 
+    const [loading, setLoading] = useState(true);
+    const [selected, setSelected] = useState(new Set());
+    const sensors = useSensors(useSensor(MouseSensor), useSensor(TouchSensor));
+
+    // Load PDF
     useEffect(() => {
         if (!file) return;
-
         const loadPdf = async () => {
             setLoading(true);
             try {
@@ -27,110 +79,89 @@ const PageGrid = ({ file, mode, onChange, initialOrder, initialSelection }) => {
                 const numPages = pdf.numPages;
                 const loadedPages = [];
 
-                // Render all pages (Thumbnail size)
-                // Note: For large PDFs (50+ pages), this loop should be optimized/chunked.
-                // For this toolkit, we assume reasonable usage (<20 pages usually).
                 for (let i = 1; i <= numPages; i++) {
                     const page = await pdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 0.3 }); // Small thumbnail
+                    const viewport = page.getViewport({ scale: 0.3 });
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
-
                     await page.render({ canvasContext: context, viewport }).promise;
-                    loadedPages.push({
-                        id: `page-${i}`, // Unique ID for framer-motion reorder
-                        pageNum: i,
-                        image: canvas.toDataURL(),
-                        width: viewport.width,
-                        height: viewport.height
-                    });
+                    loadedPages.push({ id: `page-${i}`, pageNum: i, image: canvas.toDataURL() });
                 }
-
                 setPages(loadedPages);
-                // For organise: start with 1,2,3... default order
-                if (mode === 'organise') {
-                    // checks if we have an existing verified order string, else default
-                    setOrderedPages(loadedPages);
-                } else {
-                     setOrderedPages(loadedPages); // Split just shows in order
-                }
-
-                setLoading(false);
-            } catch (err) {
-                console.error("Grid load failed", err);
-                setLoading(false);
-            }
+            } finally { setLoading(false); }
         };
-
         loadPdf();
     }, [file]);
 
-    // Handle Split Toggle
-    const toggleSelection = (pageNum) => {
+    // Sync external "1-5" string to internal Selection Set
+    useEffect(() => {
+        if (mode === 'split') {
+            setSelected(parsePageRange(initialSelection));
+        }
+    }, [initialSelection, mode]);
+
+    // Split: Toggle Logic
+    const togglePage = (pageNum) => {
         const newSet = new Set(selected);
         if (newSet.has(pageNum)) newSet.delete(pageNum);
         else newSet.add(pageNum);
-        setSelected(newSet);
         
-        // Output format: "1,3,5"
+        setSelected(newSet); // Optimistic UI
+        // Update parent with sorted list
         const sorted = Array.from(newSet).sort((a,b) => a-b);
         onChange(sorted.join(', '));
     };
 
-    // Handle Reorder Update
-    const onReorder = (newOrder) => {
-        setOrderedPages(newOrder);
-        // Output format: "1,3,2,4" (The page numbers in their new visual positions)
-        const orderString = newOrder.map(p => p.pageNum).join(', ');
-        onChange(orderString);
-    };
-    
-    // Handle Delete (Organise Mode)
-    const removePage = (id) => {
-         const newOrder = orderedPages.filter(p => p.id !== id);
-         onReorder(newOrder);
+    // Organise: Drag Logic
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        if (active.id !== over.id) {
+            setPages((items) => {
+                const oldIndex = items.findIndex(i => i.id === active.id);
+                const newIndex = items.findIndex(i => i.id === over.id);
+                const newOrder = arrayMove(items, oldIndex, newIndex);
+                
+                onChange(newOrder.map(p => p.pageNum).join(', ')); // Propagate change
+                return newOrder;
+            });
+        }
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-400 animate-pulse">Generated thumbnails...</div>;
+    const handleRemove = (id) => {
+        setPages(prev => {
+            const newOrder = prev.filter(p => p.id !== id);
+            onChange(newOrder.map(p => p.pageNum).join(', '));
+            return newOrder;
+        });
+    };
 
+    if (loading) return <div className="p-8 text-center text-gray-400 animate-pulse">Generating thumbnails...</div>;
+
+    // --- Mode: ORGANISE (Drag & Drop) ---
     if (mode === 'organise') {
         return (
             <div className="select-none">
-                 <p className="text-xs text-gray-500 mb-3 text-center">Drag to reorder. Click trash to remove.</p>
-                <Reorder.Group 
-                    axis="y" 
-                    values={orderedPages} 
-                    onReorder={onReorder} 
-                    className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                    layoutScroll
-                >
-                    {orderedPages.map((page) => (
-                        <Reorder.Item key={page.id} value={page} className="relative group touch-none cursor-grab active:cursor-grabbing">
-                            <div className="bg-white p-2 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative">
-                                <span className="absolute top-1 left-2 text-xs font-bold text-gray-400 bg-white/80 px-1 rounded">
-                                    P{page.pageNum}
-                                </span>
-                                <button 
-                                    onClick={() => removePage(page.id)}
-                                    className="absolute top-1 right-1 p-1 text-red-400 hover:text-red-600 bg-white/90 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                >
-                                    <Trash2 size={14} />
-                                </button>
-                                <img src={page.image} alt={`Page ${page.pageNum}`} className="w-full h-auto rounded border border-gray-100" />
-                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 pointer-events-none">
-                                     <GripVertical className="text-gray-800 bg-white/50 rounded-full p-1 w-8 h-8" />
-                                </div>
-                            </div>
-                        </Reorder.Item>
-                    ))}
-                </Reorder.Group>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <SortableContext items={pages} strategy={rectSortingStrategy}>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {pages.map((page) => (
+                                <SortablePage key={page.id} page={page} onRemove={handleRemove} />
+                            ))}
+                        </div>
+                    </SortableContext>
+                </DndContext>
+                <div className="mt-4 text-center">
+                    <p className="text-xs text-gray-400">
+                        {pages.length} pages remaining
+                    </p>
+                </div>
             </div>
         );
     }
 
-    // Split Mode (Selection Grid)
+    // --- Mode: SPLIT (Selection) ---
     return (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 select-none">
             {pages.map((page) => {
@@ -138,21 +169,23 @@ const PageGrid = ({ file, mode, onChange, initialOrder, initialSelection }) => {
                 return (
                     <div 
                         key={page.id}
-                        onClick={() => toggleSelection(page.pageNum)}
+                        onClick={() => togglePage(page.pageNum)}
                         className={`
-                            relative cursor-pointer rounded-lg border-2 p-2 transition-all
-                            ${isSelected ? 'border-primary bg-blue-50/30' : 'border-transparent hover:bg-gray-50'}
+                            relative cursor-pointer rounded-lg border-2 p-2 transition-all duration-200
+                            ${isSelected ? 'border-primary bg-blue-50/50 shadow-md transform scale-[1.02]' : 'border-transparent hover:bg-gray-50'}
                         `}
                     >
-                         <div className={`absolute top-2 right-2 z-10 ${isSelected ? 'text-primary' : 'text-gray-200'}`}>
-                            <CheckCircle size={20} fill={isSelected ? "currentColor" : "none"} className={isSelected ? "bg-white rounded-full" : ""}/>
+                         <div className={`absolute top-2 right-2 z-10 transition-colors ${isSelected ? 'text-primary' : 'text-gray-200'}`}>
+                            <CheckCircle size={20} fill={isSelected ? "currentColor" : "white"} className={isSelected ? "text-white" : ""}/>
                          </div>
                          <img 
                             src={page.image} 
                             alt={`Page ${page.pageNum}`} 
-                            className={`w-full h-auto rounded shadow-sm transition-opacity ${isSelected ? 'opacity-100' : 'opacity-70 grayscale-[0.3]'}`} 
+                            className={`w-full h-auto rounded shadow-sm transition-all ${isSelected ? 'opacity-100' : 'opacity-60 grayscale-[0.5]'}`} 
                         />
-                        <p className="text-center text-xs font-medium text-gray-500 mt-2">Page {page.pageNum}</p>
+                        <p className={`text-center text-xs font-medium mt-2 ${isSelected ? 'text-primary' : 'text-gray-400'}`}>
+                            Page {page.pageNum}
+                        </p>
                     </div>
                 );
             })}
