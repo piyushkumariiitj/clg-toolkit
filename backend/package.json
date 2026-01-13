@@ -1,0 +1,22 @@
+{
+    "name": "college-submission-toolkit-backend",
+    "version": "1.0.0",
+    "description": "Backend for College Submission Toolkit",
+    "main": "server.js",
+    "type": "commonjs",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "fs-extra": "^11.2.0",
+        "multer": "^1.4.5-lts.1",
+        "pdf-lib": "^1.17.1",
+        "uuid": "^9.0.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.3"
+    }
+}
