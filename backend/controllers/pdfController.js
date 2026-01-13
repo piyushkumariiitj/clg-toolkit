@@ -56,6 +56,21 @@ exports.compress = async (req, res) => {
         const inputPath = req.file.path;
         const outputPath = path.join(TEMP_DIR, `compressed_${req.file.filename}`);
 
+        // 🧠 OPTIMIZATION: If file is already smaller than/equal to target, don't compress!
+        // This prevents unnecessary quality loss and processing time.
+        if (targetSize && req.file.size <= targetSize) {
+             console.log(`Skipping compression: ${req.file.size} <= ${targetSize}`);
+             await fs.copy(inputPath, outputPath);
+             
+             return res.json({
+                url: `/download/${path.basename(outputPath)}`,
+                filename: path.basename(outputPath),
+                size: req.file.size,
+                originalSize: req.file.size,
+                message: 'File was already under target size (Original Quality Preserved)'
+            });
+        }
+
         // 📝 STRATEGY: Try presets from High Quality -> Low Quality until target size is met
         const presets = ['/prepress', '/printer', '/ebook', '/screen']; 
         let bestPath = null;

@@ -30,7 +30,7 @@ import UploadArea from './components/UploadArea';
 import ToolConfig from './components/ToolConfig';
 import StatusBadge from './components/StatusBadge';
 import Preview from './components/Preview';
-import { uploadFile, compressFile, mergeFiles, renameFile, convertImagesToPdf, updateMetadata } from './api';
+import { uploadFile, compressFile, mergeFiles, convertImagesToPdf } from './api';
 
 const App = () => {
     // --------------------------------------------------------------------------------------------
@@ -41,15 +41,13 @@ const App = () => {
     const [files, setFiles] = useState([]);
     
     // UI State Machine: Controls which 'Tool' is active
-    // Options: 'compress' | 'merge' | 'rename' | 'image-to-pdf' | 'metadata'
+    // Options: 'compress' | 'merge' | 'image-to-pdf'
     const [mode, setMode] = useState('compress'); 
     
     // Configuration Object: Stores settings for ALL tools.
     // *Design Decision*: Centralizing config prevents data loss when switching tabs.
     const [config, setConfig] = useState({ 
         targetSize: 200 * 1024, 
-        rename: { rollNo: '', subject: '', type: 'ASSIGNMENT', date: new Date().toISOString().split('T')[0] },
-        metadata: { title: '', author: '', keywords: '' }
     });
 
     // Request/Response Lifecycle State
@@ -119,12 +117,8 @@ const App = () => {
                 if(res.warning) setError(res.warning); // Handle non-fatal warnings
             } else if (mode === 'merge') {
                 res = await mergeFiles(files);
-            } else if (mode === 'rename') {
-                res = await renameFile(files[0], config.rename);
             } else if (mode === 'image-to-pdf') {
                 res = await convertImagesToPdf(files);
-            } else if (mode === 'metadata') {
-                res = await updateMetadata(files[0], config.metadata);
             }
             
             setResult(res);

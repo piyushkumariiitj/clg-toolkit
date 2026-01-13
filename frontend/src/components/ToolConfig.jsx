@@ -5,9 +5,7 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing }) => {
     const tabs = [
         { id: 'compress', label: 'Compress' },
         { id: 'merge', label: 'Merge' },
-        { id: 'rename', label: 'Rename' },
-        { id: 'image-to-pdf', label: 'Img > PDF' },
-        { id: 'metadata', label: 'Metadata' }
+        { id: 'image-to-pdf', label: 'Img > PDF' }
     ];
 
     return (
@@ -80,99 +78,9 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing }) => {
                     </div>
                 )}
 
-                {mode === 'rename' && (
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Roll Number</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                    placeholder="12345"
-                                    value={config.rename?.rollNo || ''}
-                                    onChange={(e) => setConfig({...config, rename: {...config.rename, rollNo: e.target.value}})}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Subject</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                    placeholder="CS101"
-                                    value={config.rename?.subject || ''}
-                                    onChange={(e) => setConfig({...config, rename: {...config.rename, subject: e.target.value}})}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-                                <select 
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                    value={config.rename?.type || 'ASSIGNMENT'}
-                                    onChange={(e) => setConfig({...config, rename: {...config.rename, type: e.target.value}})}
-                                >
-                                    <option value="ASSIGNMENT">Assignment</option>
-                                    <option value="LAB">Lab Record</option>
-                                    <option value="PROJECT">Project Report</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Date</label>
-                                <input 
-                                    type="date" 
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                    value={config.rename?.date || ''}
-                                    onChange={(e) => setConfig({...config, rename: {...config.rename, date: e.target.value}})}
-                                />
-                            </div>
-                        </div>
-                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
-                             <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Preview</p>
-                             <p className="font-mono text-sm text-gray-700 font-medium">
-                                {config.rename?.rollNo || 'ROLL'}_{config.rename?.subject || 'SUB'}_{config.rename?.type || 'TYPE'}_{config.rename?.date || 'DATE'}.pdf
-                             </p>
-                        </div>
-                    </div>
-                )}
 
-                {mode === 'metadata' && (
-                    <div className="space-y-4">
-                        <div className="p-3 bg-blue-50 text-blue-800 rounded-lg text-sm mb-4">
-                            Remove "scanned by camscanner" tags and set yourself as the author.
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Title</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                    placeholder="Assignment 1"
-                                    value={config.metadata?.title || ''}
-                                    onChange={(e) => setConfig({...config, metadata: {...config.metadata, title: e.target.value}})}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Author</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                    placeholder="Your Name"
-                                    value={config.metadata?.author || ''}
-                                    onChange={(e) => setConfig({...config, metadata: {...config.metadata, author: e.target.value}})}
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-xs font-semibold text-gray-600 mb-1">Keywords (comma separated)</label>
-                                <input 
-                                    type="text" 
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                                    placeholder="college, assignment, submission"
-                                    value={config.metadata?.keywords || ''}
-                                    onChange={(e) => setConfig({...config, metadata: {...config.metadata, keywords: e.target.value}})}
-                                />
-                            </div>
-                        </div>
-                    </div>
-                )}
+
+
             </div>
         </div>
     );
