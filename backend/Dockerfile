@@ -1,26 +1,24 @@
-# Use official Node.js image (Debian based includes apt-get)
-FROM node:18-slim
+# Use Node.js 18 (LTS) on Alpine Linux for a small image
+FROM node:18-alpine
 
 # Install Ghostscript
-RUN apt-get update && apt-get install -y \
-    ghostscript \
-    && rm -rf /var/lib/apt/lists/*
+# Alpine's package manager is 'apk'
+RUN apk add --no-cache ghostscript
 
-# Create app directory
-WORKDIR /usr/src/app
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
 # Install dependencies
-COPY package*.json ./
 RUN npm install
 
-# Bundle app source
+# Copy the rest of the application code
 COPY . .
 
-# Create temp directory
-RUN mkdir -p temp
-
-# Expose port
+# Expose the port the app runs on
 EXPOSE 5000
 
-# Start command
-CMD [ "npm", "start" ]
+# Start the application
+CMD ["npm", "start"]
