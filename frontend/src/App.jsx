@@ -483,7 +483,7 @@ const App = () => {
                         <br />
                         Made with ♡ by Piyush.
                     </p>
-                    <p className="text-[10px] text-gray-300 dark:text-slate-600 font-medium tracking-widest uppercase">
+                    <p className="text-[10px] text-blue-300 dark:text-slate-600 font-medium tracking-widest uppercase">
                         College Submission Toolkit v2.0
                     </p>
                 </footer>
