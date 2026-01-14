@@ -23,12 +23,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { FileText, Download, RefreshCw, AlertCircle, CheckCircle, RotateCcw, Monitor, Image as ImageIcon } from 'lucide-react';
+import { FileText, Download, RefreshCw, AlertCircle, CheckCircle, RotateCcw, Image as ImageIcon } from 'lucide-react';
+import logo from './assets/logo.png';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import UploadArea from './components/UploadArea';
 import ToolConfig from './components/ToolConfig';
-import StatusBadge from './components/StatusBadge';
+import FAQ from './components/FAQ';
 import Preview from './components/Preview';
 import ThemeToggle from './components/ThemeToggle';
 import InteractiveBackground from './components/InteractiveBackground';
@@ -197,21 +198,30 @@ const App = () => {
     return (
         <div className="min-h-screen py-10 px-4 font-sans antialiased text-gray-800 dark:text-gray-100 transition-colors duration-300 relative">
             <InteractiveBackground />
+            
+            {/* ↖️ Brand Logo - Top Left Corner */}
+            <div className="absolute top-6 left-6 z-50">
+                <motion.div 
+                    initial={{ opacity: 0, x: -20 }} 
+                    animate={{ opacity: 1, x: 0 }}
+                    className="cursor-pointer"
+                    onClick={() => window.location.href = '/'}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    <img src={logo} alt="College Submission Toolkit" className="h-16 md:h-20 drop-shadow-md" />
+                </motion.div>
+            </div>
+
+            {/* ↗️ Theme Toggle - Top Right Corner */}
+            <div className="absolute top-6 right-6 z-50">
+                <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+            </div>
+
             <div className="max-w-3xl mx-auto space-y-8 relative z-10">
                 
                 {/* Header */}
-                <header className="relative text-center space-y-3">
-                    <div className="absolute top-0 right-0">
-                        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
-                    </div>
-                
-                    <motion.div 
-                        initial={{ scale: 0.9, opacity: 0 }} 
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="inline-flex items-center justify-center p-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur rounded-2xl shadow-lg mb-2"
-                    >
-                        <Monitor className="text-primary w-8 h-8" />
-                    </motion.div>
+                <header className="text-center space-y-3 pt-12">
                     
                     <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm leading-tight">
                         Compress, Merge & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Submit Instantly.</span>
@@ -458,53 +468,15 @@ const App = () => {
 
                 </div>
 
-                {/* SEO FAQ Section */}
-                <div className="max-w-3xl mx-auto mt-24 pt-16 border-t border-gray-200 dark:border-slate-800">
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">Frequently Asked Questions</h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        {[
-                            {
-                                q: "How do I reduce a PDF below 200KB?",
-                                a: "Upload your file and select the 'College Portal (≤200KB)' preset. Our algorithm aggressively compresses images to meet strict limits."
-                            },
-                            {
-                                q: "Will my handwriting remain readable?",
-                                a: "Yes. We use intelligent compression that reduces file size by up to 90% while keeping text and handwriting sharp for professors."
-                            },
-                            {
-                                q: "Can I compress for Google Classroom?",
-                                a: "Absolutely. Use the 'Email Ready (≤1MB)' preset to prevent upload timeouts on slow connections."
-                            },
-                            {
-                                q: "Is it safe to upload my homework?",
-                                a: "Yes. Files are processed securely and automatically deleted. We do not store your assignments permanently."
-                            },
-                            {
-                                q: "Can I combine multiple lab reports?",
-                                a: "Yes. Use the 'Merge' tool to select multiple PDFs or images and combine them into a single submission file."
-                            },
-                            {
-                                q: "Does this work on mobile?",
-                                a: "Yes! The toolkit is fully optimized for iPhone, iPad, and Android, so you can compress assignments directly from your phone."
-                            },
-                            {
-                                q: "How do I convert photos to PDF?",
-                                a: "Simply upload your JPG or PNG images. The tool will automatically detect them and offer to convert them into a single PDF document."
-                            },
-                            {
-                                q: "Is there a file limit?",
-                                a: "You can process files up to 50MB. This covers almost all scanned assignments, lab manuals, and project reports."
-                            }
-                        ].map((faq, i) => (
-                            <div key={i} className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
-                                <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-2">{faq.q}</h3>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{faq.a}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-                
-                {/* Footer */}
+            </div>
+
+            {/* Wide FAQ Section */}
+            <div className="relative z-10 w-full px-4">
+                 <FAQ />
+            </div>
+            
+            {/* Footer */}
+            <div className="max-w-3xl mx-auto relative z-10 pb-10 px-4">
                 <footer className="text-center space-y-2 pt-8 border-t border-gray-200/20 dark:border-slate-700/50">
                     <p className="text-xs text-gray-400 dark:text-gray-500">
                         No data is stored permanently.
