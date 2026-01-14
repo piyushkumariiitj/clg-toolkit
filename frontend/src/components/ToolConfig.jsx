@@ -19,9 +19,9 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files }) => 
     ];
 
     return (
-        <div className="glass-card rounded-2xl overflow-hidden transition-all duration-300 dark:bg-slate-800/80 dark:border-slate-700">
+        <div className="glass-card rounded-2xl overflow-hidden transition-all duration-300">
             {/* Scrollable Tabs Container */}
-            <div className="p-2 bg-gray-50/50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-700 overflow-x-auto no-scrollbar">
+            <div className="p-2 bg-gray-50/80 dark:bg-slate-900/80 border-b border-gray-100 dark:border-slate-700 overflow-x-auto no-scrollbar">
                 <div className="flex gap-2 min-w-max">
                     {tabs.map(tab => {
                         const isActive = mode === tab.id;

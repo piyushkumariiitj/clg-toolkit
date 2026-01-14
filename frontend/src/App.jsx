@@ -31,6 +31,7 @@ import ToolConfig from './components/ToolConfig';
 import StatusBadge from './components/StatusBadge';
 import Preview from './components/Preview';
 import ThemeToggle from './components/ThemeToggle';
+import InteractiveBackground from './components/InteractiveBackground';
 import { uploadFile, compressFile, mergeFiles, convertImagesToPdf, splitFile, organiseFile, rotateFile, pdfToWord } from './api';
 
 const App = () => {
@@ -174,8 +175,10 @@ const App = () => {
     // --------------------------------------------------------------------------------------------
     // 🖥️ RENDER
     // --------------------------------------------------------------------------------------------
+
     return (
-        <div className="min-h-screen bg-mesh py-10 px-4 font-sans antialiased text-gray-800 dark:text-gray-100 transition-colors duration-300">
+        <div className="min-h-screen py-10 px-4 font-sans antialiased text-gray-800 dark:text-gray-100 transition-colors duration-300 relative">
+            <InteractiveBackground />
             <div className="max-w-3xl mx-auto space-y-8 relative z-10">
                 
                 {/* Header */}

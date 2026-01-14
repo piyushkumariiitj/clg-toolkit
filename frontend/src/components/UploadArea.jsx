@@ -26,8 +26,8 @@ const UploadArea = ({ onFilesSelected, processing }) => {
                 relative overflow-hidden group cursor-pointer transition-all duration-300
                 border-2 border-dashed rounded-3xl p-10 text-center
                 ${isDragActive 
-                    ? 'border-primary bg-blue-50/50 dark:bg-blue-900/20' 
-                    : 'border-slate-300 dark:border-slate-600 hover:border-primary/50 dark:hover:border-primary/50 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm'
+                    ? 'border-primary bg-blue-50/90 dark:bg-blue-900/40' 
+                    : 'border-slate-300 dark:border-slate-600 hover:border-primary/60 dark:hover:border-primary/60 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md shadow-sm'
                 }
                 ${processing ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
             `}

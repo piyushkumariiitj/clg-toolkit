@@ -219,8 +219,14 @@ const PageGrid = ({ file, mode, onChange, initialSelection }) => {
                             }
                         `}
                     >
-                         <div className={`absolute top-2 right-2 z-10 transition-colors ${isSelected ? 'text-primary' : 'text-gray-200 dark:text-slate-700'}`}>
-                            <CheckCircle size={20} fill={isSelected ? "currentColor" : "white"} className={isSelected ? "text-white" : "dark:fill-slate-800"}/>
+                         <div className={`
+                             absolute top-2 right-2 z-10 p-1 rounded-full transition-all duration-200
+                             ${isSelected 
+                                ? 'bg-primary text-white scale-110 shadow-sm' 
+                                : 'bg-gray-200 dark:bg-slate-700 text-gray-400 dark:text-slate-500 hover:bg-gray-300 dark:hover:bg-slate-600'
+                             }
+                         `}>
+                            <CheckCircle size={16} strokeWidth={3} />
                          </div>
                          <img 
                             src={page.image} 
