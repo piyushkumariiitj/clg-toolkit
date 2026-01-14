@@ -1,23 +1,23 @@
 /**
  * ================================================================================================
- * 📄 FILE: App.jsx
+ * FILE: App.jsx
  * ------------------------------------------------------------------------------------------------
- * 🏗️ ARCHITECTURE ROLE: Main Application Entry Point & State Container
+ * ARCHITECTURE ROLE: Main Application Entry Point & State Container
  * 
  * This is a "Smart Component" or Container pattern in React. 
  * It manages the global state of the application for this Single Page Application (SPA).
  * 
- * 🔄 DATA FLOW:
+ * DATA FLOW:
  * User Action --> Local State Update (setFiles/setMode) --> API Call (services/api.js)
  * --> Async Wait (Processing UI) --> Result State Update --> Completion UI
  * 
- * 🧩 KEY COMPONENTS:
- * - **UploadArea**: Handles Drag & Drop + native file selection.
- * - **ToolConfig**: Context-aware configuration panel (changes based on `mode`).
- * - **Preview**: Renders PDF first page (Client-side via pdfjs-dist).
+ * KEY COMPONENTS:
+ * - UploadArea: Handles Drag & Drop + native file selection.
+ * - ToolConfig: Context-aware configuration panel (changes based on mode).
+ * - Preview: Renders PDF first page (Client-side via pdfjs-dist).
  * 
- * 🛠️ DESIGN PATTERN:
- * - **Mode-Based Switching**: Instead of routing (React Router), we use a simple state machine (`mode`)
+ * DESIGN PATTERN:
+ * - Mode-Based Switching: Instead of routing (React Router), we use a simple state machine (mode)
  *   to switch views. This keeps the app lightweight and "tool-like".
  * ================================================================================================
  */
@@ -36,7 +36,7 @@ import { uploadFile, compressFile, mergeFiles, convertImagesToPdf, splitFile, or
 
 const App = () => {
     // --------------------------------------------------------------------------------------------
-    // 📦 STATE MANAGEMENT
+    // STATE MANAGEMENT
     // --------------------------------------------------------------------------------------------
     
     // Core data: Array of files selected by user
@@ -77,7 +77,7 @@ const App = () => {
     const [validation, setValidation] = useState(null); // Metadata from /validate endpoint
 
     // --------------------------------------------------------------------------------------------
-    // 🎬 HANDLERS
+    // HANDLERS
     // --------------------------------------------------------------------------------------------
 
     /**
@@ -85,7 +85,7 @@ const App = () => {
      * Implements "Smart Mode Switching" - guesses intent based on file type/count.
      */
     const handleFilesSelected = (newFiles) => {
-        // 🆔 Assign unique ID to each file for React keys
+        // Assign unique ID to each file for React keys
         const taggedFiles = newFiles.map(f => {
             f.id = crypto.randomUUID();
             return f;
@@ -96,7 +96,7 @@ const App = () => {
         setResult(null); // Reset previous results on new input
         setError(null);
         
-        // 🧠 LOGIC: Auto-detect user intent
+        // LOGIC: Auto-detect user intent
         // 1. If Image -> Switch to Converter
         // 2. If Multiple Files -> Switch to Merger
         const isImage = newFiles.some(f => f.type.startsWith('image/'));
@@ -136,7 +136,7 @@ const App = () => {
         setProcessingStep('Uploading...'); // Initial Step
         setError(null);
         
-        // 3️⃣ Simulated Lifecycle Progress (since backend is fast/opaque)
+        // Simulated Lifecycle Progress (since backend is fast/opaque)
         const progressTimer = setTimeout(() => setProcessingStep('Processing...'), 1500);
 
         try {
@@ -191,7 +191,7 @@ const App = () => {
     };
 
     // --------------------------------------------------------------------------------------------
-    // 🖥️ RENDER
+    // RENDER
     // --------------------------------------------------------------------------------------------
 
     return (
@@ -213,11 +213,11 @@ const App = () => {
                         <Monitor className="text-primary w-8 h-8" />
                     </motion.div>
                     
-                    <h1 className="text-5xl font-extrabold tracking-tight text-slate-800 dark:text-white drop-shadow-sm">
-                        College Submission <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Toolkit</span>
+                    <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white drop-shadow-sm leading-tight">
+                        Compress, Merge & <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Submit Instantly.</span>
                     </h1>
-                    <p className="text-slate-500 dark:text-slate-400 text-lg max-w-lg mx-auto font-medium">
-                        Fast, private, and purpose-built for students.
+                    <p className="text-slate-600 dark:text-slate-300 text-lg max-w-2xl mx-auto font-medium leading-relaxed">
+                        The all-in-one student toolkit. Fix <span className="font-bold text-red-500">"File Too Large"</span> errors, combine assignments, and convert images for Moodle & Google Classroom.
                     </p>
                 </header>
 
@@ -292,7 +292,7 @@ const App = () => {
 
                     {/* SECTION 3: Action Trigger */}
                     {/* SECTION 3: Action Trigger */}
-                    {/* 1️⃣ Dynamic Primary Action Button & 3️⃣ Lifecycle States */}
+                    {/* Dynamic Primary Action Button & Lifecycle States */}
                     {files.length > 0 && !result && (
                         <div className="space-y-3">
                             <motion.button
@@ -313,14 +313,14 @@ const App = () => {
                                 {processing ? (
                                     <>
                                         <RefreshCw className="animate-spin" /> 
-                                        {/* 3️⃣ Simulated Lifecycle State */}
+                                        {/* Simulated Lifecycle State */}
                                         <span className="animate-pulse">
                                             {processingStep || 'Processing...'}
                                         </span>
                                     </>
                                 ) : (
                                     <>
-                                        {/* 1️⃣ Dynamic Label */}
+                                        {/* Dynamic Label */}
                                         {mode === 'compress' ? 'Compress PDF' :
                                          mode === 'merge' ? 'Merge PDFs' :
                                          mode === 'split' ? 'Split PDF' :
@@ -332,7 +332,7 @@ const App = () => {
                                 )}
                             </motion.button>
                             
-                            {/* 5️⃣ Trust & Privacy Indicator */}
+                            {/* Trust & Privacy Indicator */}
                             <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
                                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                                 <span>No data saved. Files auto-deleted after 5min.</span>
@@ -367,7 +367,7 @@ const App = () => {
                                 </div>
                                 
                                 <div className="px-8 pb-8 space-y-6">
-                                    {/* 📊 Before vs After Comparison Panel */}
+                                    {/* Before vs After Comparison Panel */}
                                     <div className="bg-gray-50/50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 mx-4">
                                         {(() => {
                                             const originalSize = files.reduce((acc, f) => acc + f.size, 0);
@@ -411,7 +411,7 @@ const App = () => {
                                                             </div>
                                                         )}
                                                         
-                                                        {/* 📄 Backend Addition Plan: Add 'pageCount' to response json in /compress endpoint */}
+                                                        {/* Backend Addition Plan: Add 'pageCount' to response json in /compress endpoint */}
                                                         {result.pageCount && (
                                                             <div className="px-3 py-1.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center gap-1">
                                                                 <FileText size={12} /> {result.pageCount} Pages
@@ -456,6 +456,52 @@ const App = () => {
                         )}
                     </AnimatePresence>
 
+                </div>
+
+                {/* SEO FAQ Section */}
+                <div className="max-w-3xl mx-auto mt-24 pt-16 border-t border-gray-200 dark:border-slate-800">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">Frequently Asked Questions</h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                        {[
+                            {
+                                q: "How do I reduce a PDF below 200KB?",
+                                a: "Upload your file and select the 'College Portal (≤200KB)' preset. Our algorithm aggressively compresses images to meet strict limits."
+                            },
+                            {
+                                q: "Will my handwriting remain readable?",
+                                a: "Yes. We use intelligent compression that reduces file size by up to 90% while keeping text and handwriting sharp for professors."
+                            },
+                            {
+                                q: "Can I compress for Google Classroom?",
+                                a: "Absolutely. Use the 'Email Ready (≤1MB)' preset to prevent upload timeouts on slow connections."
+                            },
+                            {
+                                q: "Is it safe to upload my homework?",
+                                a: "Yes. Files are processed securely and automatically deleted. We do not store your assignments permanently."
+                            },
+                            {
+                                q: "Can I combine multiple lab reports?",
+                                a: "Yes. Use the 'Merge' tool to select multiple PDFs or images and combine them into a single submission file."
+                            },
+                            {
+                                q: "Does this work on mobile?",
+                                a: "Yes! The toolkit is fully optimized for iPhone, iPad, and Android, so you can compress assignments directly from your phone."
+                            },
+                            {
+                                q: "How do I convert photos to PDF?",
+                                a: "Simply upload your JPG or PNG images. The tool will automatically detect them and offer to convert them into a single PDF document."
+                            },
+                            {
+                                q: "Is there a file limit?",
+                                a: "You can process files up to 50MB. This covers almost all scanned assignments, lab manuals, and project reports."
+                            }
+                        ].map((faq, i) => (
+                            <div key={i} className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow">
+                                <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-2">{faq.q}</h3>
+                                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{faq.a}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
                 
                 {/* Footer */}

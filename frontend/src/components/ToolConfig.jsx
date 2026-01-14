@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'; // ➕ Added useRef
+import React, { useRef } from 'react'; // Added useRef
 import PageGrid from './PageGrid';
 import { FileText, ArrowUp, ArrowDown, X, Plus } from 'lucide-react'; // ➕ Added Plus icon
 
@@ -62,9 +62,9 @@ const FileItem = ({ file, index, total, onMove, onRemove }) => {
 };
 
 const ToolConfig = ({ mode, setMode, config, setConfig, processing, files, setFiles }) => {
-    const fileInputRef = useRef(null); // 🔗 Ref for hidden input
+    const fileInputRef = useRef(null); // Ref for hidden input
 
-    // 🧠 LOGIC: Analyze files to determine available tools
+    // Logic: Analyze files to determine available tools
     const hasPdf = files?.some(f => f.type === 'application/pdf');
     const hasImage = files?.some(f => f.type.startsWith('image/'));
 
@@ -78,7 +78,7 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files, setFi
         { id: 'image-to-pdf', label: 'Img > PDF', disabled: hasPdf } // Tool for Images only
     ];
 
-    // 🔄 File Reordering Logic
+    // File Reordering Logic
     const moveFile = (index, direction) => {
         const newFiles = [...files];
         if (index + direction < 0 || index + direction >= newFiles.length) return;
@@ -94,11 +94,11 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files, setFi
         setFiles(newFiles);
     };
 
-    // ➕ Add More Files Logic
+    // Add More Files Logic
     const handleAddFiles = (e) => {
         if (e.target.files && e.target.files.length > 0) {
             const newFiles = Array.from(e.target.files).map(f => {
-                f.id = crypto.randomUUID(); // 🆔 Essential for reordering!
+                f.id = crypto.randomUUID(); // Essential for reordering!
                 return f;
             });
             setFiles(prev => [...prev, ...newFiles]);
@@ -142,7 +142,7 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files, setFi
                 {mode === 'compress' && (
                     <div className="space-y-4">
                         <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Target File Size</label>
-                        {/* 4️⃣ Student-Focused Presets */}
+                        {/* Student-Focused Presets */}
                         <div className="flex flex-wrap gap-2 mb-4">
                             {[
                                 { label: '🎓 College Portal (≤200KB)', size: 200 },
@@ -193,7 +193,7 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files, setFi
                             </div>
                         </div>
 
-                        {/* 2️⃣ Real-Time Output Size Estimation */}
+                        {/* Real-Time Output Size Estimation */}
                         {files && files.length > 0 && (
                             <div className="mt-3 p-3 bg-gray-50 dark:bg-slate-800/50 rounded-xl border border-gray-100 dark:border-slate-700">
                                 <div className="flex justify-between items-center text-sm">
@@ -234,7 +234,7 @@ const ToolConfig = ({ mode, setMode, config, setConfig, processing, files, setFi
                                 💡 Use <span className="font-bold">Up/Down arrows</span> to set merge order.
                             </p>
                             
-                            {/* ➕ Add Files Button - Only in Merge Section */}
+                            {/* Add Files Button - Only in Merge Section */}
                             <button 
                                 onClick={() => fileInputRef.current?.click()}
                                 className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold rounded-lg border border-blue-100 dark:border-slate-700 shadow-sm transition-all"
