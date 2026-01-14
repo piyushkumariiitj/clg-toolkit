@@ -71,6 +71,7 @@ const App = () => {
 
     // Request/Response Lifecycle State
     const [processing, setProcessing] = useState(false); // Validates async state
+    const [processingStep, setProcessingStep] = useState('Starting...'); // 3️⃣ Lifecycle State Text
     const [result, setResult] = useState(null); // Stores server response (download URL)
     const [error, setError] = useState(null); // Error boundary message
     const [validation, setValidation] = useState(null); // Metadata from /validate endpoint
@@ -84,7 +85,14 @@ const App = () => {
      * Implements "Smart Mode Switching" - guesses intent based on file type/count.
      */
     const handleFilesSelected = (newFiles) => {
-        setFiles(prev => [...prev, ...newFiles]);
+        // 🆔 Assign unique ID to each file for React keys
+        const taggedFiles = newFiles.map(f => {
+            f.id = crypto.randomUUID();
+            return f;
+        });
+        
+        
+        setFiles(prev => [...prev, ...taggedFiles]);
         setResult(null); // Reset previous results on new input
         setError(null);
         
@@ -96,11 +104,6 @@ const App = () => {
             setMode('image-to-pdf');
         } else if (files.length > 0 || newFiles.length > 1) {
             if (mode !== 'image-to-pdf') setMode('merge');
-        }
-        
-        // Trigger background validation for first PDF (Async Effect)
-        if (newFiles[0] && newFiles[0].type === 'application/pdf') {
-             validateFile(newFiles[0]);
         }
     };
 
@@ -122,32 +125,45 @@ const App = () => {
      * Main Action Dispatcher.
      * Routes the current `mode` + `files` + `config` to the correct API endpoint.
      */
+    /**
+     * Main Action Dispatcher.
+     * Routes the current `mode` + `files` + `config` to the correct API endpoint.
+     */
     const handleProcess = async () => {
         if (files.length === 0) return;
         
         setProcessing(true);
+        setProcessingStep('Uploading...'); // Initial Step
         setError(null);
         
+        // 3️⃣ Simulated Lifecycle Progress (since backend is fast/opaque)
+        const progressTimer = setTimeout(() => setProcessingStep('Processing...'), 1500);
+
         try {
             let res;
             // Strategy Pattern: execution logic depends on `mode` string
             if (mode === 'compress') {
                 res = await compressFile(files[0], config.targetSize);
-                if(res.warning) setError(res.warning); // Handle non-fatal warnings
+                if(res.warning) setError(res.warning); 
             } else if (mode === 'merge') {
+                setProcessingStep('Merging...');
                 res = await mergeFiles(files);
             } else if (mode === 'image-to-pdf') {
+                setProcessingStep('Converting...');
                 res = await convertImagesToPdf(files);
             } else if (mode === 'split') {
+                setProcessingStep('Splitting...');
                 res = await splitFile(files[0], config.split.pages);
             } else if (mode === 'organise') {
                 res = await organiseFile(files[0], config.organise.pageOrder);
             } else if (mode === 'rotate') {
                 res = await rotateFile(files[0], JSON.parse(config.rotate.rotations));
             } else if (mode === 'pdf-to-word') {
+                setProcessingStep('Converting to Word...');
                 res = await pdfToWord(files[0]);
             }
             
+            setProcessingStep('Finalizing...');
             setResult(res);
             
         } catch (err) {
@@ -155,7 +171,9 @@ const App = () => {
             // Extract readable message from Axios error object
             setError(err.response?.data?.error || 'Processing failed');
         } finally {
+            clearTimeout(progressTimer);
             setProcessing(false);
+            setProcessingStep('Starting...');
             // UX Polish: Auto-scroll to result
             setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 100);
         }
@@ -248,10 +266,6 @@ const App = () => {
                                                     <p className="text-sm font-semibold truncate text-gray-700 dark:text-gray-200">{f.name}</p>
                                                     <p className="text-xs text-gray-400 font-medium">{(f.size / 1024).toFixed(1)} KB</p>
                                                 </div>
-                                                {/* Status Badge from /validate */}
-                                                {validation && i === 0 && f.type === 'application/pdf' && (
-                                                    <StatusBadge status={validation.status} />
-                                                )}
                                             </motion.div>
                                         ))}
                                     </div>
@@ -262,40 +276,68 @@ const App = () => {
 
                     {/* SECTION 2: Tool Configuration Panel */}
                     {/* Conditionally rendered only when files exist */}
+                    {/* SECTION 2: Tool Configuration Panel */}
+                    {/* Conditionally rendered only when files exist */}
                     {files.length > 0 && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                            <ToolConfig 
-                                mode={mode} 
-                                setMode={setMode} 
-                                config={config} 
-                                setConfig={setConfig} 
-                                processing={processing}
-                                files={files}
-                            />
-                        </motion.div>
+                        <ToolConfig 
+                            mode={mode} 
+                            setMode={setMode} 
+                            config={config} 
+                            setConfig={setConfig} 
+                            processing={processing}
+                            files={files}
+                            setFiles={setFiles}
+                        />
                     )}
 
                     {/* SECTION 3: Action Trigger */}
+                    {/* SECTION 3: Action Trigger */}
+                    {/* 1️⃣ Dynamic Primary Action Button & 3️⃣ Lifecycle States */}
                     {files.length > 0 && !result && (
-                        <motion.button
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            onClick={handleProcess}
-                            disabled={processing}
-                            className={`
-                                w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-[0.99]
-                                ${processing ? 'bg-gray-400 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/25 hover:shadow-xl'}
-                            `}
-                        >
-                            {processing ? (
-                                <>
-                                    <RefreshCw className="animate-spin" /> Processing...
-                                </>
-                            ) : (
-                                <>
-                                    Process Files
-                                </>
-                            )}
-                        </motion.button>
+                        <div className="space-y-3">
+                            <motion.button
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                onClick={handleProcess}
+                                disabled={processing || 
+                                    (mode === 'compress' && !config.targetSize) ||
+                                    (mode === 'split' && !config.split.pages)
+                                }
+                                className={`
+                                    w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-[0.99]
+                                    ${processing || (mode === 'compress' && !config.targetSize) || (mode === 'split' && !config.split.pages)
+                                        ? 'bg-slate-300 dark:bg-slate-700 cursor-not-allowed' 
+                                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:shadow-blue-500/25 hover:shadow-xl'
+                                    }
+                                `}
+                            >
+                                {processing ? (
+                                    <>
+                                        <RefreshCw className="animate-spin" /> 
+                                        {/* 3️⃣ Simulated Lifecycle State */}
+                                        <span className="animate-pulse">
+                                            {processingStep || 'Processing...'}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* 1️⃣ Dynamic Label */}
+                                        {mode === 'compress' ? 'Compress PDF' :
+                                         mode === 'merge' ? 'Merge PDFs' :
+                                         mode === 'split' ? 'Split PDF' :
+                                         mode === 'organise' ? 'Save New Order' :
+                                         mode === 'rotate' ? 'Save Rotation' :
+                                         mode === 'image-to-pdf' ? 'Convert to PDF' :
+                                         mode === 'pdf-to-word' ? 'Convert to Word' : 'Process Files'}
+                                    </>
+                                )}
+                            </motion.button>
+                            
+                            {/* 5️⃣ Trust & Privacy Indicator */}
+                            <div className="flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                <span>No data saved. Files auto-deleted after 5min.</span>
+                            </div>
+                        </div>
                     )}
 
                     {/* SECTION 4: Feedback / Error Boundary */}
@@ -325,12 +367,60 @@ const App = () => {
                                 </div>
                                 
                                 <div className="px-8 pb-8 space-y-6">
-                                    {/* Critical Stats for user verification */}
-                                    <div className="flex items-center justify-center gap-4 text-center">
-                                        <div className="px-6 py-3 bg-gray-50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-700 min-w-[120px]">
-                                            <p className="text-[10px] tracking-wider font-bold text-gray-400 uppercase">Size</p>
-                                            <p className="text-xl font-black text-gray-800 dark:text-gray-200">{(result.size / 1024).toFixed(1)} KB</p>
-                                        </div>
+                                    {/* 📊 Before vs After Comparison Panel */}
+                                    <div className="bg-gray-50/50 dark:bg-slate-900/50 rounded-2xl border border-gray-100 dark:border-slate-800 p-4 mx-4">
+                                        {(() => {
+                                            const originalSize = files.reduce((acc, f) => acc + f.size, 0);
+                                            const finalSize = result.size;
+                                            const reduction = ((originalSize - finalSize) / originalSize) * 100;
+                                            const isReduction = reduction > 0;
+                                            
+                                            // Format bytes helper
+                                            const fmt = (b) => b > 1024*1024 ? `${(b/1024/1024).toFixed(2)} MB` : `${(b/1024).toFixed(1)} KB`;
+
+                                            return (
+                                                <div className="flex flex-col gap-4">
+                                                    {/* Row 1: Sizes */}
+                                                    <div className="flex items-center justify-center gap-6 text-center">
+                                                        <div>
+                                                            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Original</p>
+                                                            <p className="text-lg font-bold text-gray-500 dark:text-gray-400 line-through decoration-red-400/50">
+                                                                {fmt(originalSize)}
+                                                            </p>
+                                                        </div>
+                                                        
+                                                        <div className="flex flex-col items-center">
+                                                            <div className="w-8 h-px bg-gray-300 dark:bg-slate-600 mb-1" />
+                                                            <span className="text-gray-400 text-[10px] font-mono">TO</span>
+                                                            <div className="w-8 h-px bg-gray-300 dark:bg-slate-600 mt-1" />
+                                                        </div>
+
+                                                        <div>
+                                                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Final</p>
+                                                            <p className="text-xl font-black text-gray-800 dark:text-white">
+                                                                {fmt(finalSize)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Row 2: Badges (Reduction & Pages) */}
+                                                    <div className="flex justify-center gap-3">
+                                                        {Math.abs(reduction) > 1 && (
+                                                            <div className={`px-3 py-1.5 rounded-full text-xs font-bold border ${isReduction ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'}`}>
+                                                                {isReduction ? '⬇' : '⬆'} {Math.abs(reduction).toFixed(0)}% {isReduction ? 'Saved' : 'Change'}
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* 📄 Backend Addition Plan: Add 'pageCount' to response json in /compress endpoint */}
+                                                        {result.pageCount && (
+                                                            <div className="px-3 py-1.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center gap-1">
+                                                                <FileText size={12} /> {result.pageCount} Pages
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
 
                                     {/* Live Preview Component - Proves the file is valid */}
@@ -371,9 +461,9 @@ const App = () => {
                 {/* Footer */}
                 <footer className="text-center space-y-2 pt-8 border-t border-gray-200/20 dark:border-slate-700/50">
                     <p className="text-xs text-gray-400 dark:text-gray-500">
-                        Files are automatically deleted after 5 minutes.
-                        <br />
                         No data is stored permanently.
+                        <br />
+                        Made with ♡ by Piyush.
                     </p>
                     <p className="text-[10px] text-gray-300 dark:text-slate-600 font-medium tracking-widest uppercase">
                         College Submission Toolkit v2.0
